@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="SnowScene/SnowScene.vcxproj" />
+  <Project Path="SnowScene/SnowScene.vcxproj" Id="ff78b9a4-3f77-4549-ad3d-eee83b294b56" />
 </Solution>

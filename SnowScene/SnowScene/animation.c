@@ -123,6 +123,20 @@ void display(void)
 		Function Prototypes" section near the top of this template.
 	*/
 
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Sky
+	glBegin(GL_QUADS);
+	glColor4f(0.1f, 0.1f, 0.4f, 1.0f);   // dark blue at top
+	glVertex2f(0, 800);
+	glVertex2f(800, 800);
+	glColor4f(0.4f, 0.6f, 0.9f, 1.0f);   // lighter blue at bottom
+	glVertex2f(800, 0);
+	glVertex2f(0, 0);
+	glEnd();
+
+	glutSwapBuffers();
+
 }
 
 /*
@@ -191,6 +205,12 @@ void idle(void)
 */
 void init(void)
 {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 800, 0, 800);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 /*
