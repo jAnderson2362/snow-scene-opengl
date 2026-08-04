@@ -10,6 +10,7 @@
 #include <freeglut.h>
 #include <math.h>
 #include <stdio.h>
+#include <time.h>
 
 
  /******************************************************************************
@@ -56,6 +57,9 @@ void idle(void);
  * Animation-Specific Function Prototypes (add your own here)
  ******************************************************************************/
 
+void drawCircle(float centreX, float centreY, float radius);
+void drawSolidCircle(float centreX, float centreY, float radius);
+
 void main(int argc, char **argv);
 void init(void);
 void think(void);
@@ -63,6 +67,9 @@ void think(void);
 /******************************************************************************
  * Animation-Specific Setup (Add your own definitions, constants, and globals here)
  ******************************************************************************/
+
+#define GROUND_POINTS 20
+float groundY[GROUND_POINTS];
 
 /******************************************************************************
  * Entry Point (don't put anything except the main function here)
@@ -135,6 +142,118 @@ void display(void)
 	glVertex2f(0, 0);
 	glEnd();
 
+	// Ground
+	glBegin(GL_POLYGON);
+	// bottom two corners - darker
+	glColor3f(0.5f, 0.5f, 0.65f);   
+	glVertex2f(0, 0);
+	glVertex2f(800, 0);
+
+	//bumpy top edge - brighter white
+	for (int i = GROUND_POINTS - 1; i >= 0; i--)
+	{
+		float x = i * (800.0f / (GROUND_POINTS - 1));
+		glColor3f(0.95f, 0.95f, 1.0f);
+		glVertex2f(x, groundY[i]);
+	}
+	glEnd();
+
+	// Snowman
+	glColor3f(1.0f, 1.0f, 1.0f);
+	drawCircle(400, 210, 70);   // bottom (biggest)
+	drawCircle(400, 300, 55);   // middle
+	drawCircle(400, 370, 40);   // head (smallest)
+
+	// Eyes
+	glColor3f(0.0f, 0.0f, 0.0f);
+	drawSolidCircle(385, 380, 6);   // left eye
+	drawSolidCircle(415, 380, 6);   // right eye
+
+	// Nose (carrot)
+	glColor3f(1.0f, 0.5f, 0.0f);   // orange
+	glBegin(GL_TRIANGLES);
+	glVertex2f(400, 370);   // base top
+	glVertex2f(400, 362);   // base bottom
+	glVertex2f(425, 360);   // tip pointing right
+	glEnd();
+
+	// Stick arms
+	glColor3f(0.4f, 0.2f, 0.0f);   // brown
+	glLineWidth(5.0f);
+	glBegin(GL_LINES);
+	// left arm
+	glVertex2f(355, 310);
+	glVertex2f(310, 330);
+	// left arm branch 1 (forks upward, partway along)
+	glVertex2f(340, 317);
+	glVertex2f(335, 330);
+	// left arm branch 2 (forks downward, further along)
+	glVertex2f(325, 324);
+	glVertex2f(320, 315);
+	
+	// right arm
+	glVertex2f(445, 310);
+	glVertex2f(490, 330);
+	// right arm branch 1 (forks upward, partway along)
+	glVertex2f(460, 317);
+	glVertex2f(465, 330);
+	// right arm branch 2 (forks downward, further along)
+	glVertex2f(470, 322);
+	glVertex2f(478, 312);
+	glEnd();
+
+	// Scarf
+	glColor3f(0.8f, 0.1f, 0.1f);   // red
+	// neck band (dips in the middle to follow the neck)
+	glBegin(GL_POLYGON);
+	glVertex2f(370, 345);   // top left
+	glVertex2f(430, 345);   // top right
+	glVertex2f(428, 336);   // bottom right
+	glVertex2f(400, 330);   // bottom middle (dips lower)
+	glVertex2f(372, 336);   // bottom left
+	glEnd();
+
+	// dangling end
+	glBegin(GL_QUADS);
+	glVertex2f(410, 340);
+	glVertex2f(422, 340);
+	glVertex2f(422, 305);
+	glVertex2f(410, 305);
+	glEnd();
+
+	// Buttons
+	glColor3f(0.1f, 0.1f, 0.1f);   // dark
+	drawSolidCircle(400, 300, 5);
+	drawSolidCircle(400, 280, 5);
+	drawSolidCircle(400, 320, 5);
+
+	// Hat
+	glColor3f(0.1f, 0.1f, 0.1f);   // black
+	// brim
+	glBegin(GL_QUADS);
+	glVertex2f(365, 408);
+	glVertex2f(435, 408);
+	glVertex2f(435, 400);
+	glVertex2f(365, 400);
+	glEnd();
+
+	// crown
+	glBegin(GL_QUADS);
+	glVertex2f(378, 408);
+	glVertex2f(422, 408);
+	glVertex2f(422, 448);
+	glVertex2f(378, 448);
+	glEnd();
+
+	// hat band
+	glColor3f(0.8f, 0.1f, 0.1f);   // red band
+	glBegin(GL_QUADS);
+	glVertex2f(378, 416);
+	glVertex2f(422, 416);
+	glVertex2f(422, 408);
+	glVertex2f(378, 408);
+	glEnd();
+
 	glutSwapBuffers();
 
 }
@@ -200,17 +319,58 @@ void idle(void)
  * Animation-Specific Functions (Add your own functions at the end of this section)
  ******************************************************************************/
 
+void drawCircle(float centreX, float centreY, float radius)
+{
+	glBegin(GL_TRIANGLE_FAN);
+	glColor3f(0.95f, 0.95f, 1.0f);
+	glVertex2f(centreX, centreY);   // centre point
+
+	for (int angle = 0; angle <= 360; angle += 10)
+	{
+		float rad = angle * 3.14159f / 180.0f;
+		float x = centreX + radius * cos(rad);
+		float y = centreY + radius * sin(rad);
+		glColor3f(0.5f, 0.5f, 0.65f);
+		glVertex2f(x, y);
+	}
+	glEnd();
+}
+
+void drawSolidCircle(float centreX, float centreY, float radius)
+{
+	glBegin(GL_TRIANGLE_FAN);
+	glVertex2f(centreX, centreY);   // centre point
+
+	for (int angle = 0; angle <= 360; angle += 10)
+	{
+		float rad = angle * 3.14159f / 180.0f;
+		float x = centreX + radius * cos(rad);
+		float y = centreY + radius * sin(rad);
+		glVertex2f(x, y);
+	}
+	glEnd();
+}
+
 /*
 	Initialise OpenGL and set up our scene before we begin the render loop.
 */
 void init(void)
 {
+	srand((unsigned int)time(NULL));
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, 800, 0, 800);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	float height = 225;   // starting height
+	for (int i = 0; i < GROUND_POINTS; i++)
+	{
+		groundY[i] = height;
+		height += (rand() % 21) - 10;   // drift up or down by -10 to +10
+	}
 }
 
 /*
