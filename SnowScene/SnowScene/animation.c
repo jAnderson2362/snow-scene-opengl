@@ -71,6 +71,19 @@ void think(void);
 #define GROUND_POINTS 20
 float groundY[GROUND_POINTS];
 
+#define MAX_PARTICLES 1000
+
+typedef struct {
+	float x, y;         // position
+	float speed;        // how fast it falls
+	float size;         // how big the point is
+	float alpha;        // transparency (0 = invisible, 1 = solid)
+	int active;         // is this partcile in use
+	float sway;         // horizontal sway phase
+} Particle;
+
+Particle particles[MAX_PARTICLES];
+
 /******************************************************************************
  * Entry Point (don't put anything except the main function here)
  ******************************************************************************/
@@ -254,6 +267,19 @@ void display(void)
 	glVertex2f(378, 408);
 	glEnd();
 
+	// Snow
+	for (int i = 0; i < MAX_PARTICLES; i++)
+	{
+		if (particles[i].active)
+		{
+			glPointSize(particles[i].size);
+			glBegin(GL_POINTS);
+			glColor4f(1.0f, 1.0f, 1.0f, particles[i].alpha);
+			glVertex2f(particles[i].x, particles[i].y);
+			glEnd();
+		}
+	}
+
 	glutSwapBuffers();
 
 }
@@ -351,6 +377,18 @@ void drawSolidCircle(float centreX, float centreY, float radius)
 	glEnd();
 }
 
+void spawnParticle(Particle* p)
+{
+	p->x = rand() % 800;              // random x across the width
+	p->y = 800;                       // start at the top
+	p->size = 1.0f + (rand() % 400) / 100.0f;   // smooth range 1.0 to 5.0
+	p->speed = p->size * 20.0f + rand() % 10;   // random fall speed
+	p->alpha = 0.4f + (p->size - 1.0f) * 0.12f + (rand() % 15) / 100.0f;  // random transparency 0.3-1.0
+	p->active = 1;                    // mark as active
+	p->sway = rand() % 628 / 100.0f;   // random phase 0 to ~6.28 (2*pi)
+
+}
+
 /*
 	Initialise OpenGL and set up our scene before we begin the render loop.
 */
@@ -364,12 +402,19 @@ void init(void)
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_POINT_SMOOTH);
+	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
 	float height = 225;   // starting height
 	for (int i = 0; i < GROUND_POINTS; i++)
 	{
 		groundY[i] = height;
 		height += (rand() % 21) - 10;   // drift up or down by -10 to +10
+	}
+
+	for (int i = 0; i < MAX_PARTICLES; i++)
+	{
+		particles[i].active = 0;
 	}
 }
 
@@ -383,6 +428,31 @@ void init(void)
 */
 void think(void)
 {
+	// Spawn a new particle each frame (find an inactive one and activate it)
+	for (int i = 0; i < MAX_PARTICLES; i++)
+	{
+		if (!particles[i].active)
+		{
+			spawnParticle(&particles[i]);
+			break;
+		}
+	}
+
+	for (int i = 0; i < MAX_PARTICLES; i++)
+	{
+		if (particles[i].active)
+		{
+			particles[i].y -= particles[i].speed * FRAME_TIME_SEC;
+			particles[i].sway += 2.0f * FRAME_TIME_SEC;   // advance the sway
+			particles[i].x += sinf(particles[i].sway) * 0.5f;   // gentle horizontal drift
+			if (particles[i].y < 0)
+			{
+				spawnParticle(&particles[i]);
+			}
+		}
+
+	}
+	
 	/*
 		TEMPLATE: REPLACE THIS COMMENT WITH YOUR ANIMATION/SIMULATION CODE
 

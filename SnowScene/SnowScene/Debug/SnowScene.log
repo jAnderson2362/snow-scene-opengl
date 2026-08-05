@@ -1,8 +1,9 @@
 ﻿  animation.c
-C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(331,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(332,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(347,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(348,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(357,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(358,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(373,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(374,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(382,16): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   SnowScene.vcxproj -> C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\Debug\SnowScene.exe
   C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\freeglut\bin\freeglut.dll
   1 File(s) copied
