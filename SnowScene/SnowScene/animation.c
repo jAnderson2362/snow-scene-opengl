@@ -5,6 +5,7 @@
  * This template provides a basic FPS-limited render loop for an animated scene.
  *
  ******************************************************************************/
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <Windows.h>
 #include <freeglut.h>
@@ -59,6 +60,7 @@ void idle(void);
 
 void drawCircle(float centreX, float centreY, float radius);
 void drawSolidCircle(float centreX, float centreY, float radius);
+void drawText(float x, float y, const char* text);
 
 void main(int argc, char **argv);
 void init(void);
@@ -83,6 +85,7 @@ typedef struct {
 } Particle;
 
 Particle particles[MAX_PARTICLES];
+int snowing = 1;   // 1 = snow on, 0 = snow off
 
 /******************************************************************************
  * Entry Point (don't put anything except the main function here)
@@ -170,6 +173,19 @@ void display(void)
 		glVertex2f(x, groundY[i]);
 	}
 	glEnd();
+
+	// Background snow (small/distant flakes - drawn behind snowman)
+	for (int i = 0; i < MAX_PARTICLES; i++)
+	{
+		if (particles[i].active && particles[i].size < 3.0f)
+		{
+			glPointSize(particles[i].size);
+			glBegin(GL_POINTS);
+			glColor4f(1.0f, 1.0f, 1.0f, particles[i].alpha);
+			glVertex2f(particles[i].x, particles[i].y);
+			glEnd();
+		}
+	}
 
 	// Snowman
 	glColor3f(1.0f, 1.0f, 1.0f);
@@ -267,10 +283,10 @@ void display(void)
 	glVertex2f(378, 408);
 	glEnd();
 
-	// Snow
+	// Foreground snow (large/close flakes - drawn in front of snowman)
 	for (int i = 0; i < MAX_PARTICLES; i++)
 	{
-		if (particles[i].active)
+		if (particles[i].active && particles[i].size >= 3.0f)
 		{
 			glPointSize(particles[i].size);
 			glBegin(GL_POINTS);
@@ -279,6 +295,24 @@ void display(void)
 			glEnd();
 		}
 	}
+
+	// Diagnostics
+	int activeCount = 0;
+	for (int i = 0; i < MAX_PARTICLES; i++)
+	{
+		if (particles[i].active)
+			activeCount++;
+	}
+
+	char buffer[64];
+	sprintf(buffer, "particles: %d of %d", activeCount, MAX_PARTICLES);
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	drawText(20, 770, "Diagnostics:");
+	drawText(20, 750, buffer);
+	drawText(20, 720, "Scene controls:");
+	drawText(20, 700, "s: toggle snow");
+	drawText(20, 680, "q: quit");
 
 	glutSwapBuffers();
 
@@ -303,10 +337,10 @@ void keyPressed(unsigned char key, int x, int y)
 			Rather than using literals (e.g. "d" for diagnostics), create a new KEY_
 			definition in the "Keyboard Input Handling Setup" section of this file.
 		*/
-	case 'l':
-		renderFillEnabled = !renderFillEnabled;
+	case 's':
+		snowing = !snowing;
 		break;
-	case KEY_EXIT:
+	case 'q':
 		exit(0);
 		break;
 	}
@@ -354,8 +388,8 @@ void drawCircle(float centreX, float centreY, float radius)
 	for (int angle = 0; angle <= 360; angle += 10)
 	{
 		float rad = angle * 3.14159f / 180.0f;
-		float x = centreX + radius * cos(rad);
-		float y = centreY + radius * sin(rad);
+		float x = centreX + radius * cosf(rad);
+		float y = centreY + radius * sinf(rad);
 		glColor3f(0.5f, 0.5f, 0.65f);
 		glVertex2f(x, y);
 	}
@@ -370,8 +404,8 @@ void drawSolidCircle(float centreX, float centreY, float radius)
 	for (int angle = 0; angle <= 360; angle += 10)
 	{
 		float rad = angle * 3.14159f / 180.0f;
-		float x = centreX + radius * cos(rad);
-		float y = centreY + radius * sin(rad);
+		float x = centreX + radius * cosf(rad);
+		float y = centreY + radius * sinf(rad);
 		glVertex2f(x, y);
 	}
 	glEnd();
@@ -379,14 +413,23 @@ void drawSolidCircle(float centreX, float centreY, float radius)
 
 void spawnParticle(Particle* p)
 {
-	p->x = rand() % 800;              // random x across the width
+	p->x = (float)(rand() % 800);              // random x across the width
 	p->y = 800;                       // start at the top
-	p->size = 1.0f + (rand() % 400) / 100.0f;   // smooth range 1.0 to 5.0
+	p->size = 1.0f + (rand() % 400) / 100.0f;   // smooth range 1.0 to 6.0
 	p->speed = p->size * 20.0f + rand() % 10;   // random fall speed
 	p->alpha = 0.4f + (p->size - 1.0f) * 0.12f + (rand() % 15) / 100.0f;  // random transparency 0.3-1.0
 	p->active = 1;                    // mark as active
-	p->sway = rand() % 628 / 100.0f;   // random phase 0 to ~6.28 (2*pi)
+	p->sway = (rand() % 628) / 100.0f;   // random phase 0 to ~6.28 (2*pi)
 
+}
+
+void drawText(float x, float y, const char* text)
+{
+	glRasterPos2f(x, y);
+	for (int i = 0; text[i] != '\0'; i++)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
+	}
 }
 
 /*
@@ -428,13 +471,16 @@ void init(void)
 */
 void think(void)
 {
-	// Spawn a new particle each frame (find an inactive one and activate it)
-	for (int i = 0; i < MAX_PARTICLES; i++)
+	// Spawn a new particle each frame (only when snowing)
+	if (snowing)
 	{
-		if (!particles[i].active)
+		for (int i = 0; i < MAX_PARTICLES; i++)
 		{
-			spawnParticle(&particles[i]);
-			break;
+			if (!particles[i].active)
+			{
+				spawnParticle(&particles[i]);
+				break;
+			}
 		}
 	}
 
@@ -447,7 +493,10 @@ void think(void)
 			particles[i].x += sinf(particles[i].sway) * 0.5f;   // gentle horizontal drift
 			if (particles[i].y < 0)
 			{
-				spawnParticle(&particles[i]);
+				if (snowing)
+					spawnParticle(&particles[i]); // recycle
+				else
+					particles[i].active = 0; // let it die
 			}
 		}
 
