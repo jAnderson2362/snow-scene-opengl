@@ -85,7 +85,14 @@ typedef struct {
 } Particle;
 
 Particle particles[MAX_PARTICLES];
+
 int snowing = 1;   // 1 = snow on, 0 = snow off
+float timeOfDay = 0.0f;   // cycles 0 to 1: 0=day, 0.5=night, 1=day again
+
+#define NUM_STARS 50
+float starX[NUM_STARS];
+float starY[NUM_STARS];
+float starPhase[NUM_STARS];
 
 /******************************************************************************
  * Entry Point (don't put anything except the main function here)
@@ -148,15 +155,29 @@ void display(void)
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	// Day/night brightness (1.0 = full day, 0.1 = night)
+	float brightness = 0.55f + 0.45f * cosf(timeOfDay * 2.0f * 3.14159f);
+
 	// Sky
 	glBegin(GL_QUADS);
-	glColor4f(0.1f, 0.1f, 0.4f, 1.0f);   // dark blue at top
+	glColor4f(0.1f * brightness, 0.1f * brightness, 0.4f * brightness, 1.0f);   // top
 	glVertex2f(0, 800);
 	glVertex2f(800, 800);
-	glColor4f(0.4f, 0.6f, 0.9f, 1.0f);   // lighter blue at bottom
+	glColor4f(0.4f * brightness, 0.6f * brightness, 0.9f * brightness, 1.0f);   // bottom
 	glVertex2f(800, 0);
 	glVertex2f(0, 0);
 	glEnd();
+
+	float t = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;   // seconds since start (smooth)
+	for (int i = 0; i < NUM_STARS; i++)
+	{ 
+		glPointSize(2.0f);
+		glBegin(GL_POINTS);
+		float twinkle = 0.5f + 0.5f * sinf(t * 2.0f + starPhase[i]);
+		glColor4f(1.0f, 1.0f, 1.0f, (1.0f - brightness) * twinkle);
+		glVertex2f(starX[i], starY[i]);
+		glEnd();
+	}
 
 	// Ground
 	glBegin(GL_POLYGON);
@@ -455,6 +476,13 @@ void init(void)
 		height += (rand() % 21) - 10;   // drift up or down by -10 to +10
 	}
 
+	for (int i = 0; i < NUM_STARS; i++)
+	{
+		starX[i] = rand() % 800;
+		starY[i] = 400 + rand() % 400;   // upper half of sky only
+		starPhase[i] = rand() % 628 / 100.0f;   // random phase 0 to ~2pi
+	}
+
 	for (int i = 0; i < MAX_PARTICLES; i++)
 	{
 		particles[i].active = 0;
@@ -471,6 +499,11 @@ void init(void)
 */
 void think(void)
 {
+
+	timeOfDay += 0.05f * FRAME_TIME_SEC;   // slowly cycle
+	if (timeOfDay > 1.0f)
+		timeOfDay -= 1.0f;                  // wrap back around
+
 	// Spawn a new particle each frame (only when snowing)
 	if (snowing)
 	{

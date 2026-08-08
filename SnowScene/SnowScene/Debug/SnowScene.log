@@ -1,4 +1,6 @@
 ﻿  animation.c
+C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(481,21): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\animation.c(482,18): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   SnowScene.vcxproj -> C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\Debug\SnowScene.exe
   C:\Users\James\Documents\GitHub\snow-scene-opengl\SnowScene\SnowScene\freeglut\bin\freeglut.dll
   1 File(s) copied
