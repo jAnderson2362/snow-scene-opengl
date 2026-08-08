@@ -53,6 +53,7 @@ void display(void);
 void reshape(int width, int h);
 void keyPressed(unsigned char key, int x, int y);
 void idle(void);
+void specialKeyPressed(int key, int x, int y);  
 
 /******************************************************************************
  * Animation-Specific Function Prototypes (add your own here)
@@ -94,6 +95,8 @@ float starX[NUM_STARS];
 float starY[NUM_STARS];
 float starPhase[NUM_STARS];
 
+float windStrength = 0.0f;   // negative = blowing left, positive = blowing right
+
 /******************************************************************************
  * Entry Point (don't put anything except the main function here)
  ******************************************************************************/
@@ -117,6 +120,7 @@ void main(int argc, char **argv)
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyPressed);
 	glutIdleFunc(idle);
+	glutSpecialFunc(specialKeyPressed);
 
 	// Record when we started rendering the very first frame (which should happen after we call glutMainLoop).
 	frameStartTime = (unsigned int)glutGet(GLUT_ELAPSED_TIME);
@@ -333,7 +337,8 @@ void display(void)
 	drawText(20, 750, buffer);
 	drawText(20, 720, "Scene controls:");
 	drawText(20, 700, "s: toggle snow");
-	drawText(20, 680, "q: quit");
+	drawText(20, 680, "left/right arrows: wind");
+	drawText(20, 660, "q: quit");
 
 	glutSwapBuffers();
 
@@ -363,6 +368,18 @@ void keyPressed(unsigned char key, int x, int y)
 		break;
 	case 'q':
 		exit(0);
+		break;
+	}
+}
+
+void specialKeyPressed(int key, int x, int y)
+{
+	switch (key) {
+	case GLUT_KEY_LEFT:
+		windStrength -= 20.0f;
+		break;
+	case GLUT_KEY_RIGHT:
+		windStrength += 20.0f;
 		break;
 	}
 }
@@ -524,6 +541,7 @@ void think(void)
 			particles[i].y -= particles[i].speed * FRAME_TIME_SEC;
 			particles[i].sway += 2.0f * FRAME_TIME_SEC;   // advance the sway
 			particles[i].x += sinf(particles[i].sway) * 0.5f;   // gentle horizontal drift
+			particles[i].x += windStrength * FRAME_TIME_SEC;
 			if (particles[i].y < 0)
 			{
 				if (snowing)
