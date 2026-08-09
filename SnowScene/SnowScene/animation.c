@@ -96,6 +96,7 @@ float starY[NUM_STARS];
 float starPhase[NUM_STARS];
 
 float windStrength = 0.0f;   // negative = blowing left, positive = blowing right
+float scarfSway = 0.0f;
 
 /******************************************************************************
  * Entry Point (don't put anything except the main function here)
@@ -267,19 +268,35 @@ void display(void)
 	glVertex2f(372, 336);   // bottom left
 	glEnd();
 
-	// dangling end
-	glBegin(GL_QUADS);
-	glVertex2f(410, 340);
-	glVertex2f(422, 340);
-	glVertex2f(422, 305);
-	glVertex2f(410, 305);
-	glEnd();
-
 	// Buttons
 	glColor3f(0.1f, 0.1f, 0.1f);   // dark
 	drawSolidCircle(400, 300, 5);
 	drawSolidCircle(400, 280, 5);
 	drawSolidCircle(400, 320, 5);
+
+	// dangling end with ripple
+	glColor3f(0.8f, 0.1f, 0.1f);   // red
+	int segments = 8;
+	float topY = 340.0f;
+	float bottomY = 305.0f;
+
+	glBegin(GL_QUAD_STRIP);
+	for (int i = 0; i <= segments; i++)
+	{
+		float fraction = (float)i / segments;        // 0 at top, 1 at bottom
+		float y = topY - (topY - bottomY) * fraction; // interpolate top to bottom
+
+		// ripple grows toward the bottom and waves over time
+		float windAmount = fabsf(windStrength) / 160.0f;   // 0 (calm) to 1 (max wind)
+		float ripple = sinf(t * 4.0f + fraction * 6.0f) * fraction * 6.0f * windAmount;
+
+		// wind sway also grows toward the bottom
+		float sway = scarfSway * fraction;
+
+		glVertex2f(410 + sway + ripple, y);   // left edge of strip
+		glVertex2f(422 + sway + ripple, y);   // right edge of strip
+	}
+	glEnd();
 
 	// Hat
 	glColor3f(0.1f, 0.1f, 0.1f);   // black
@@ -330,15 +347,18 @@ void display(void)
 	}
 
 	char buffer[64];
+	char windBuffer[64];
 	sprintf(buffer, "particles: %d of %d", activeCount, MAX_PARTICLES);
+	sprintf(windBuffer, "wind: %d", (int)windStrength);
 
 	glColor3f(1.0f, 1.0f, 1.0f);
 	drawText(20, 770, "Diagnostics:");
 	drawText(20, 750, buffer);
-	drawText(20, 720, "Scene controls:");
-	drawText(20, 700, "s: toggle snow");
-	drawText(20, 680, "left/right arrows: wind");
-	drawText(20, 660, "q: quit");
+	drawText(20, 730, windBuffer);
+	drawText(20, 700, "Scene controls:");
+	drawText(20, 680, "s: toggle snow");
+	drawText(20, 660, "left/right arrows: wind");
+	drawText(20, 640, "q: quit");
 
 	glutSwapBuffers();
 
@@ -495,8 +515,8 @@ void init(void)
 
 	for (int i = 0; i < NUM_STARS; i++)
 	{
-		starX[i] = rand() % 800;
-		starY[i] = 400 + rand() % 400;   // upper half of sky only
+		starX[i] = (float)(rand() % 800);
+		starY[i] = (float)(400 + rand() % 400);   // upper half of sky only
 		starPhase[i] = rand() % 628 / 100.0f;   // random phase 0 to ~2pi
 	}
 
@@ -520,6 +540,13 @@ void think(void)
 	timeOfDay += 0.05f * FRAME_TIME_SEC;   // slowly cycle
 	if (timeOfDay > 1.0f)
 		timeOfDay -= 1.0f;                  // wrap back around
+
+	// Clamp wind to a sensible range
+	if (windStrength > 160.0f) windStrength = 160.0f;
+	if (windStrength < -160.0f) windStrength = -160.0f;
+
+	float scarfTarget = windStrength * 0.15f;
+	scarfSway += (scarfTarget - scarfSway) * 2.0f * FRAME_TIME_SEC;
 
 	// Spawn a new particle each frame (only when snowing)
 	if (snowing)
